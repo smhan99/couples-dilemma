@@ -12,5 +12,7 @@ urlpatterns = [
     path('validateUser', api.validate_user, name='validate_user'),
     path('registerUser', api.register_user, name='register_user'),
     path('createOuting', api.create_outing, name='create_outing'),
-    path('getOutings', api.get_my_outings, name='get_my_outings')
+    path('getOutings', api.get_my_outings, name='get_my_outings'),
+    path('postPreference', api.post_preference, name='post_preference'),
+    path('getPreference', api.get_user_preference, name='get_preference')
 ]

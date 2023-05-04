@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import IntegrityError
 from django.contrib.auth import authenticate
 from .serializers import CustomUserSerializer, RestaurantSerializer, DateOutingSerializer, RestaurantChoiceSerializer
-from core.models import CustomUser, Restaurant, DateOuting, RestaurantChoice
+from core.models import CustomUser, Restaurant, DateOuting, RestaurantChoice, UserPreference
 import core.api.utils as utils
 from django.db.models import Q
 
@@ -203,3 +203,162 @@ def get_my_outings(request):
     }})
 
 
+@api_view(['POST'])
+@authentication_classes([BasicAuthentication])
+def post_preference(request):
+    """
+    Takes input as preference details and update the state of the outing and return the outing object
+
+    Input JSON:
+    {
+        "outing_id": <ID of the outing>
+       "rating" : "1 to 5 in 0.5 steps",
+       "category": "category of the restaurant",
+       "has_parking": "true or false",
+       "radius": "distance in m"
+       "price" : "1 to 4"
+    }
+
+    Output JSON:
+
+    Success case:
+    {
+        "response":
+        {
+            "outing" : {
+                id : <id_of the outing>
+                creator : <username_of_creator>
+                partner: <username_of_partner>
+                location: <location>
+                venue: <venue object if available>,
+                time: <date_time_string in the format YYYY-MM-DD HH:MM>
+                state: <state_of_outing>
+                action_pending_from: <both or none or username>
+            }
+        }
+    }
+
+    Error case:
+    {
+        "error": <Error Message>
+    }
+
+    Request Type: POST
+    Authentication Required: Yes - Basic Auth
+    """
+
+    try:
+        outing_id = request.data['outing_id']
+
+    except KeyError:
+        return Response({'error': "Missing 'outing_id' in the request"})
+
+    try:
+        outing = DateOuting.objects.get(id=outing_id)
+        if not (outing.creator == request.user or outing.partner == request.user):
+            return Response({'error': "Outing being updated doesn't involve user"})
+    except ObjectDoesNotExist:
+        return Response({'error': "Outing doesn't exist with the given ID"})
+
+    try:
+        UserPreference.objects.get(outing=outing, user=request.user)
+        return Response({'error': "User preference already submitted"})
+    except ObjectDoesNotExist:
+        pass
+
+    category = request.data['category'] if 'category' in request.data.keys() else ''
+
+    try:
+        price = int(request.data['price']) if 'price' in request.data.keys() else ''
+        if price < 1 or price > 4:
+            raise ValueError
+    except ValueError:
+        return Response({'error': "Invalid value for 'price' must be a int between 1 and 4 (both included)"})
+
+    try:
+        rating = float(request.data['rating']) if 'rating' in request.data.keys() else -1
+        if rating < 0.0 or rating > 5.0:
+            raise ValueError
+    except ValueError:
+        return Response({'error': "Invalid value for 'rating' must be a float between 0.0 and 5.0"})
+
+    has_parking = str.lower(request.data['has_parking']) if 'has_parking' in request.data.keys() else 'false'
+
+    if not (has_parking == 'false' or has_parking == 'true'):
+        return Response({'error': "Invalid value for 'has_parking' must be a true or false"})
+
+    has_parking = True if has_parking == 'true' else False
+
+    try:
+        radius = int(request.data['radius']) if 'radius' in request.data.keys() else -1
+    except ValueError:
+        return Response({'error': "Invalid value for 'radius' must be int, specifying meters"})
+
+    try:
+        preference = UserPreference(outing=outing, user=request.user, category=category, price=price, rating=rating,
+                                    has_parking=has_parking, radius=radius)
+        preference.save()
+
+        return Response({'response': 'User preference successfully captured'})
+    except BaseException as message:
+        return Response({'error': message})
+
+
+@api_view(['GET'])
+@authentication_classes([BasicAuthentication])
+def get_user_preference(request):
+    """
+    Takes input as outing_id and returns the user preference of the authenticated user for the provided outing
+
+    Input JSON:
+    {
+        "outing_id": <ID of the outing>
+    }
+
+    Output JSON:
+
+    Success case:
+    {
+        "response":
+        {
+            "user_preference": {
+                "outing_id": <id of the outing>,
+                "category": <category>,
+                "price": <price, if nothing is provided -1>,
+                "rating" : <rating, if nothing is provided 0.0>,
+                "has_parking": <has parking, if nothing is provided false>,
+                "radius": <radius in m, if nothing is provided 0>
+            }
+
+        }
+    }
+
+    Error case:
+    {
+        "error": <Error Message>
+    }
+
+    Request Type: GET
+    Authentication Required: Yes - Basic Auth
+    """
+
+    try:
+        outing_id = request.data['outing_id']
+
+    except KeyError:
+        return Response({'error': "Missing 'outing_id' in the request"})
+
+    try:
+        outing = DateOuting.objects.get(id=outing_id)
+        if not (outing.creator == request.user or outing.partner == request.user):
+            return Response({'error': "Outing being updated doesn't involve user"})
+    except ObjectDoesNotExist:
+        return Response({'error': "Outing doesn't exist with the given ID"})
+
+    try:
+        user_preference = UserPreference.objects.get(outing=outing, user=request.user)
+        return Response({'response': {
+            'preference': utils.get_user_preference(user_preference)
+        }})
+    except ObjectDoesNotExist:
+        return Response({'error': "User preference hasn't been submitted yet"})

@@ -80,6 +80,23 @@ class DateOuting(models.Model):
         ('FINALIZED', 'Finalized'),
     )
 
+    """
+    There are 4 states:
+    1. CREATED
+    2. CHOOSING_PREFERENCES
+    3. CHOOSING_RESTAURANT
+    4. FINALIZED
+    
+    And there's a field action_pending_from: which can hold either 'none', 'both', or one of the users' username
+    
+    Workflow goes like this:
+    1. When outing is created:  state - 'CHOOSING_PREFERENCES', action_pending_from - 'both'
+    2. One of them submits preferences: state - 'CHOOSING_PREFERENCES', action_pending_from - <username of the remaining user>
+    3. Both submit preferences: state - 'CHOOSING_RESTAURANT', action_pending_from - 'both'
+    4. One of them submits restaurant preferences: state - 'CHOOSING_RESTAURANT', action_pending_from - <username of the remaining user>
+    5. Both submit restaurant preferences: state - 'FINALIZED', action_pending_from - 'none'
+    
+    """
     creator = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='created_outing')
     partner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='invited_outing', blank=True,
                                 null=True, default=None)
@@ -101,7 +118,10 @@ class RestaurantChoice(models.Model):
 
 class UserPreference(models.Model):
     category = models.CharField(max_length=200)
-    price = models.IntegerField(default=1)
+    price = models.IntegerField(default=-1)
     has_parking = models.BooleanField(default=False)
     outing = models.ForeignKey(DateOuting, on_delete=models.CASCADE)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    radius = models.IntegerField(default=0)
+    rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.0)
+
