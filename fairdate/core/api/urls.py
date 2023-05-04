@@ -10,5 +10,7 @@ urlpatterns = [
 
     # Auth API
     path('validateUser', api.validate_user, name='validate_user'),
-    path('registerUser', api.register_user, name='register_user')
+    path('registerUser', api.register_user, name='register_user'),
+    path('createOuting', api.create_outing, name='create_outing'),
+    path('getOutings', api.get_my_outings, name='get_my_outings')
 ]

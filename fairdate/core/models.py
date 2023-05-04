@@ -5,8 +5,8 @@ from django.contrib.auth.models import PermissionsMixin, BaseUserManager
 from django.conf import settings
 import uuid
 
-# Create your models here.
 
+# Create your models here.
 
 
 class CustomUserManager(BaseUserManager):
@@ -62,39 +62,46 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 class Restaurant(models.Model):
     name = models.CharField(max_length=100)
     location = models.CharField(max_length=200)
+    yelp_url = models.URLField(max_length=500)
+    yelp_id = models.CharField(max_length=100)
+    image_url = models.URLField(max_length=200)
+    rating = models.DecimalField(max_digits=3, decimal_places=2, default="")
+    outing = models.ForeignKey('DateOuting', on_delete=models.CASCADE, related_name='outing')
 
     def __str__(self):
         return self.name
-    
+
 
 class DateOuting(models.Model):
     STATE_CHOICES = (
         ('CREATED', 'Created'),
-        ('PENDING', 'Pending'),
         ('CHOOSING_PREFERENCES', 'Choosing Preferences'),
         ('CHOOSING_RESTAURANT', 'Choosing Restaurant'),
         ('FINALIZED', 'Finalized'),
-        ('DECLINED', 'Declined')        
     )
 
-    invite_id = models.UUIDField(default=uuid.uuid4, editable=False)
     creator = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='created_outing')
-    partner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='invited_outing')
+    partner = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='invited_outing', blank=True,
+                                null=True, default=None)
     date_time = models.DateTimeField()
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, null=True, blank=True)
+    location = models.CharField(max_length=200)
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, null=True, blank=True, related_name='venue')
     state = models.CharField(max_length=50, choices=STATE_CHOICES, default='CREATED')
+    action_needed_from = models.CharField(max_length=50, blank=True, null=True, default='none')
 
     def __str__(self):
         return f"Outing between {self.creator} and {self.partner} on {self.date_time}"
 
 
-class RestaurantPreference(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='restaurant_preferences')
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
-    outing = models.ForeignKey(DateOuting, on_delete=models.CASCADE, related_name='restaurant_preferences')
-
-
 class RestaurantChoice(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='restaurant_choices')
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
-    outing = models.ForeignKey(DateOuting, on_delete=models.CASCADE, related_name='restaurant_choices')
+    outing = models.ForeignKey(DateOuting, on_delete=models.CASCADE)
+
+
+class UserPreference(models.Model):
+    category = models.CharField(max_length=200)
+    price = models.IntegerField(default=1)
+    has_parking = models.BooleanField(default=False)
+    outing = models.ForeignKey(DateOuting, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)

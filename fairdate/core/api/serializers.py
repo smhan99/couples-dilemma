@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from core.models import CustomUser, Restaurant, DateOuting, RestaurantPreference, RestaurantChoice
+from core.models import CustomUser, Restaurant, DateOuting, RestaurantChoice
 
 
 
@@ -19,12 +19,6 @@ class RestaurantSerializer(serializers.ModelSerializer):
 class DateOutingSerializer(serializers.ModelSerializer):
     class Meta:
         model = DateOuting
-        fields = '__all__'
-
-
-class RestaurantPreferenceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = RestaurantPreference
         fields = '__all__'
 
 
