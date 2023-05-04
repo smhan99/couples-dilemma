@@ -1,32 +1,68 @@
-import { Box, Button } from "@mui/material";
-import { purple, grey } from "@mui/material/colors";
+import { useAuth } from "../Context/AuthContext";
+import { Box, Button, Container, TextField, Typography } from "@mui/material";
+import { grey } from "@mui/material/colors";
+import plate from "../assets/blueplate.png";
 
-// MUI color palette and customization
-// https://mui.com/material-ui/customization/color/
-
-const primary = grey[800];
-const success = purple[600];
+const lightGray = grey[300];
 
 const Login = () => {
+  const { setAuthUser, setIsLoggedIn } = useAuth();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // fetch auth from DB with user object
+    console.log({
+      username: e.currentTarget.username.value,
+      password: e.currentTarget.password.value,
+    });
+
+    // if user authenticated
+    setIsLoggedIn(true);
+    setAuthUser({
+      username: e.currentTarget.username.value,
+      password: e.currentTarget.password.value,
+    });
+  };
+
   return (
-    <div>
+    <Container maxWidth="sm">
+      <img src={plate} alt="blue plate with fork and knife" className="logo" />
       <Box
         sx={{
-          width: 300,
-          height: 150,
-          backgroundColor: primary,
-          "&:hover": {
-            backgroundColor: "primary.main",
-            opacity: [0.9, 0.8, 0.7],
-          },
+          backgroundColor: lightGray,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          padding: "20px",
+          marginBottom: "20px",
         }}
       >
-        <p>Login form here</p>
-        <Button variant="contained" sx={{ background: success }}>
-          Login
-        </Button>
-      </Box>{" "}
-    </div>
+        <Typography component="h2" variant="h5" color="primary">
+          Current User?
+        </Typography>
+        <Box component="form" onSubmit={handleSubmit} noValidate>
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="username"
+            label="username"
+            name="username"
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="password"
+            label="password"
+            name="password"
+          />
+          <Button type="submit" variant="contained" color="primary">
+            Login
+          </Button>
+        </Box>
+      </Box>
+    </Container>
   );
 };
 

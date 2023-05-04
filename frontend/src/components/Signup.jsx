@@ -1,32 +1,70 @@
-import { Box, Button } from "@mui/material";
-import { indigo, grey } from "@mui/material/colors";
+import { useAuth } from "../Context/AuthContext";
+import { Box, Button, Container, TextField, Typography } from "@mui/material";
+import { purple, grey } from "@mui/material/colors";
 
-// MUI color palette and customization
-// https://mui.com/material-ui/customization/color/
-
-const primary = grey[800];
-const success = indigo[600];
+const lightGrey = grey[300];
+const darkPurple = purple[600];
 
 const Signup = () => {
+  const { setAuthUser, setIsLoggedIn } = useAuth();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // post new user to DB with user object
+
+    console.log({
+      username: e.currentTarget.username.value,
+      password: e.currentTarget.password.value,
+    });
+
+    setIsLoggedIn(true);
+    setAuthUser({
+      username: e.currentTarget.username.value,
+      password: e.currentTarget.password.value,
+    });
+  };
+
   return (
-    <div>
+    <Container maxWidth="sm">
       <Box
         sx={{
-          width: 300,
-          height: 150,
-          backgroundColor: primary,
-          "&:hover": {
-            backgroundColor: "primary.main",
-            opacity: [0.9, 0.8, 0.7],
-          },
+          backgroundColor: lightGrey,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          padding: "20px",
         }}
       >
-        <p>Create account form here</p>
-        <Button variant="contained" sx={{ background: success }}>
-          Create Account
-        </Button>
+        <Typography component="h2" variant="h5" sx={{ color: darkPurple }}>
+          New User?
+        </Typography>
+        <Box component="form" onSubmit={handleSubmit} noValidate>
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="username"
+            label="username"
+            name="username"
+          />
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="password"
+            label="password"
+            name="password"
+          />
+          <Button
+            type="submit"
+            variant="contained"
+            sx={{ background: darkPurple }}
+          >
+            Create Account
+          </Button>
+        </Box>
       </Box>
-    </div>
+    </Container>
   );
 };
 
