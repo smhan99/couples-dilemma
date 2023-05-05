@@ -7,6 +7,7 @@ import RestaurantList from "./pages/RestaurantList";
 function App() {
   return (
     <AuthProvider>
+      <Preferences/>
       <h1>Let's Eat</h1>
       <Dashboard />
     </AuthProvider>

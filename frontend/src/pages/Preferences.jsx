@@ -54,6 +54,7 @@ const Preferences = () => {
     .then((resp) => resp.json())
     .then((resp) => {
       console.log(resp);
+      console.log("HI")
       if (resp.error)
         alert(resp.error);
       //navigate?
@@ -141,11 +142,12 @@ const Preferences = () => {
             label="Parking Available"
           />
         </FormGroup>
+        <Button
+          color='primary'
+          variant='outlined'
+          onClick={() => submitPreferences()}
+        >Submit</Button>
       </FormControl>
-      <Button
-        color='secondary'
-        onClick={() => submitPreferences()}
-      >Submit</Button>
     </div>
   )
 }
