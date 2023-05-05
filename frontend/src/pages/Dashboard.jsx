@@ -1,5 +1,5 @@
 import { useAuth } from "../Context/AuthContext";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Login from "../components/Login";
 import Signup from "../components/Signup";
 import {
@@ -25,7 +25,6 @@ const Dashboard = () => {
   const [outings, setOutings] = useState([]);
   const [newOutingCreated, setNewOutingCreated] = useState(false);
 
-  const navigate = useNavigate();
   const now = new Date().toISOString();
 
   useEffect(() => {
@@ -42,12 +41,13 @@ const Dashboard = () => {
       .then((resp) => resp.json())
       .then((resp) => {
         setOutings(resp.response.outings);
+        console.log(outings);
         if (resp.error) alert(resp.error);
       });
   }, [authUser, newOutingCreated]);
 
   // filter all outings by status and return arrays for each dashboard section
-  const isPending = (outing) => outing.state === "CREATED";
+  const isPending = (outing) => outing.state === "CHOOSING_PREFERENCES";
   const isScheduled = (outing) =>
     outing.state === "FINALIZED" && outing.time > now;
   const isComplete = (outing) =>
@@ -149,15 +149,17 @@ const Dashboard = () => {
                         <ListItemText
                           primary={`${item.time} ${item.creator} & ${item.partner}`}
                         />
-                        <Link to={`/couples-dilemma/preferences`} state={{ outing_id: item.id }}>
-                          <Button id={item.id}>
-                            PREFERENCES
-                          </Button>
+                        <Link
+                          to={`/couples-dilemma/preferences`}
+                          state={{ outing_id: item.id }}
+                        >
+                          <Button id={item.id}>PREFERENCES</Button>
                         </Link>
-                        <Link to={`/couples-dilemma/restaurant-list`} state={{ outing_id: item.id }}>
-                          <Button id={item.id}>
-                            CHOOSE
-                          </Button>
+                        <Link
+                          to={`/couples-dilemma/restaurant-list`}
+                          state={{ outing_id: item.id }}
+                        >
+                          <Button id={item.id}>CHOOSE</Button>
                         </Link>
                       </ListItem>
                     );
