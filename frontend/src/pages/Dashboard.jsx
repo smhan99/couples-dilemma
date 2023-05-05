@@ -47,7 +47,9 @@ const Dashboard = () => {
   }, [authUser, newOutingCreated]);
 
   // filter all outings by status and return arrays for each dashboard section
-  const isPending = (outing) => outing.state === "CHOOSING_PREFERENCES";
+  const isPending = (outing) =>
+    outing.state === "CHOOSING_PREFERENCES" ||
+    outing.state === "CHOOSING_RESTAURANT";
   const isScheduled = (outing) =>
     outing.state === "FINALIZED" && outing.time > now;
   const isComplete = (outing) =>
@@ -159,7 +161,9 @@ const Dashboard = () => {
                           to={`/couples-dilemma/restaurant-list`}
                           state={{ outing_id: item.id }}
                         >
-                          <Button id={item.id}>CHOOSE</Button>
+                          <Button disable id={item.id}>
+                            CHOOSE
+                          </Button>
                         </Link>
                       </ListItem>
                     );
