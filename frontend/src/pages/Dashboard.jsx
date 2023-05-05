@@ -21,7 +21,7 @@ import CreateOuting from "../components/CreateOuting";
 const darkGrey = grey[800];
 
 const Dashboard = () => {
-  const { authUser, isLoggedIn, setIsLoggedIn } = useAuth();
+  const { authUser, setAuthUser, isLoggedIn, setIsLoggedIn } = useAuth();
   const [outings, setOutings] = useState([]);
   const [newOutingCreated, setNewOutingCreated] = useState(false);
 
@@ -64,6 +64,8 @@ const Dashboard = () => {
   const handleSignOut = (e) => {
     e.preventDefault();
     setIsLoggedIn(false);
+    setAuthUser(null);
+    localStorage.removeItem('user');
   };
 
   const createOuting = (datetime, invited, location) => {

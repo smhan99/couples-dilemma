@@ -42,12 +42,6 @@ const Preferences = () => {
   };
 
   const submitPreferences = () => {
-    console.log(outing_id);
-    console.log(rating);
-    console.log(category === "other" ? otherCate : category);
-    console.log(parking);
-    console.log(distance)
-    console.log(price);
     fetch("https://bhupathitharun.pythonanywhere.com/api/postPreference", {
       method: "POST",
       headers: {
