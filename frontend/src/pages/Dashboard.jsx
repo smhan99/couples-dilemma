@@ -87,6 +87,9 @@ const Dashboard = () => {
 
   return (
     <div>
+      <Typography component="h1" variant="h1">
+        Let's Eat!
+      </Typography>
       {!isLoggedIn ? (
         <div>
           <Login />
