@@ -285,7 +285,7 @@ def post_preference(request):
         return Response({'error': "Invalid value for 'price' must be a int between 1 and 4 (both included)"})
 
     try:
-        rating = float(request.data['rating']) if 'rating' in request.data.keys() else -1
+        rating = float(request.data['rating']) if 'rating' in request.data.keys() else 0.0
         if rating < 0.0 or rating > 5.0:
             raise ValueError
     except ValueError:
