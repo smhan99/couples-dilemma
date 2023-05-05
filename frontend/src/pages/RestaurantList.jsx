@@ -158,60 +158,71 @@ const RestaurantList = () => {
   );
 
   return (
-    <Grid container spacing={2} justifyContent="center">
-      <Grid item>
-        <h1>CHOOSE</h1>
-        <div>{customList(left, 300, "50%", 1)}</div>
-      </Grid>
-      <Grid item marginTop={15}>
-        <Grid container direction="column" alignItems="center">
-          <Button
-            sx={{ my: 0.5 }}
-            variant="outlined"
-            size="small"
-            onClick={handleAllRight}
-            disabled={left.length === 0 || right.length === 4}
-            aria-label="Random Suggestions"
-          >
-            Random Fill
-          </Button>
-          <Button
-            sx={{ my: 0.5 }}
-            variant="outlined"
-            size="small"
-            onClick={handleCheckedRight}
-            disabled={leftChecked.length === 0}
-            aria-label="move selected right"
-          >
-            &gt;
-          </Button>
-          <Button
-            sx={{ my: 0.5 }}
-            variant="outlined"
-            size="small"
-            onClick={handleCheckedLeft}
-            disabled={rightChecked.length === 0}
-            aria-label="move selected left"
-          >
-            &lt;
-          </Button>
-          <Button
-            sx={{ my: 0.5 }}
-            variant="outlined"
-            size="small"
-            onClick={handleAllLeft}
-            disabled={right.length === 0}
-            aria-label="move all left"
-          >
-            Clear
-          </Button>
+    <div>
+      <h1>Choose your Top 4 Restaurants!</h1>
+      <h5>
+        We have generated 3 restaurants for each of your preferences, totalling 6! 
+        Please choose your top 4 restaurants to be selected to our random selection process!
+      </h5>
+      <h5>
+        You may choose up to 4. If you wish, you may also press "RANDOM FILL" to randomly fill up your 
+        top choices!
+      </h5>
+      <Grid container spacing={2} justifyContent="center">
+        <Grid item>
+          <h3>Choose</h3>
+          <div>{customList(left, 300, "50%", 1)}</div>
+        </Grid>
+        <Grid item marginTop={15}>
+          <Grid container direction="column" alignItems="center">
+            <Button
+              sx={{ my: 0.5 }}
+              variant="outlined"
+              size="small"
+              onClick={handleAllRight}
+              disabled={left.length === 0 || right.length === 4}
+              aria-label="Random Suggestions"
+            >
+              Random Fill
+            </Button>
+            <Button
+              sx={{ my: 0.5 }}
+              variant="outlined"
+              size="small"
+              onClick={handleCheckedRight}
+              disabled={leftChecked.length === 0}
+              aria-label="move selected right"
+            >
+              &gt;
+            </Button>
+            <Button
+              sx={{ my: 0.5 }}
+              variant="outlined"
+              size="small"
+              onClick={handleCheckedLeft}
+              disabled={rightChecked.length === 0}
+              aria-label="move selected left"
+            >
+              &lt;
+            </Button>
+            <Button
+              sx={{ my: 0.5 }}
+              variant="outlined"
+              size="small"
+              onClick={handleAllLeft}
+              disabled={right.length === 0}
+              aria-label="move all left"
+            >
+              Clear
+            </Button>
+          </Grid>
+        </Grid>
+        <Grid item>
+            <h3>Top Choices</h3>
+            <div>{customList(right, 800, "50%", 2)}</div>
         </Grid>
       </Grid>
-      <Grid item>
-          <h1>TOP CHOICES</h1>
-          <div>{customList(right, 800, "50%", 2)}</div>
-      </Grid>
-    </Grid>
+    </div>
   );
 }
 
