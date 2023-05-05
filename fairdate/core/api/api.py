@@ -368,46 +368,67 @@ def get_user_preference(request):
         return Response({'error': "User preference hasn't been submitted yet"})
 
 
-@api_view(['POST'])
+
+@api_view(['GET','POST'])
 def get_restaurants(request):
 
     try:
-        user_preference_id = request.data['UserPreference_id']
+        outing_id = request.data['outing_id']
 
     except KeyError:
-        return Response({'error': "Missing 'UserPreference_id' in the request"})
+        return Response({'error': "Missing 'outing_id' in the request"})
 
-    creator_preferences = UserPreference.objects.filter(id=user_preference_id, outing__creator=request.user).first()
-    participant_preferences = UserPreference.objects.filter(id=user_preference_id, outing__creator__not=request.user).first()
+    date_outing = DateOuting.objects.get(id=outing_id)
 
+    # prefrences for both
+    creator_preferences = UserPreference.objects.filter(outing=date_outing, outing__creator=request.user).first()
+    participant_preferences = UserPreference.objects.filter(outing=date_outing, outing__creator__not=request.user).first()
 
-    categories = [creator_preferences.category]
-    if participant_preferences and participant_preferences.category != creator_preferences.category:
-        categories.append(participant_preferences.category)
-    
-    price = [creator_preferences.price]
-    if participant_preferences and participant_preferences.price != creator_preferences.price:
-        price.append(participant_preferences.price)
-
-    radius = creator_preferences.radius 
+    # creator search
+    creator_categories = [creator_preferences.category]
+    creator_price = [creator_preferences.price]
+    creator_radius = creator_preferences.radius 
+    creator_limit = 3
 
 
     MY_API_KEY = 'YOUR API KEY'
     headers = {'Authorization': 'bearer %s' % MY_API_KEY}
-    params = {
+
+    # creator call
+    creator_params = {
         'location': creator_preferences.outing.location,
-        'categories': ','.join(categories),
-        'price': price,
-        'radius': radius,
+        'categories': ','.join(creator_categories),
+        'price': creator_price,
+        'radius': creator_radius,
         'sort_by': 'rating',
         'open_now': True,
-        'limit': 7
+        'limit': creator_limit
     }
-    response = requests.get('https://api.yelp.com/v3/businesses/search', headers=headers, params=params)
-    response_data = response.json()
-    
-    restaurants = []
-    for business in response_data['businesses']:
+    creator_response = requests.get('https://api.yelp.com/v3/businesses/search', headers=headers, params=creator_params)
+    creator_data = creator_response.json()
+
+    # participant seragc
+    participant_categories = [participant_preferences.category]
+    participant_price = [participant_preferences.price]
+    participant_radius = participant_preferences.radius 
+    participant_limit = 3
+
+    # particpant call
+    participant_params = {
+        'location': participant_preferences.outing.location,
+        'categories': ','.join(participant_categories),
+        'price': participant_price,
+        'radius': participant_radius,
+        'sort_by': 'rating',
+        'open_now': True,
+        'limit': participant_limit
+    }
+    participant_response = requests.get('https://api.yelp.com/v3/businesses/search', headers=headers, params=participant_params)
+    participant_data = participant_response.json()
+
+    # save creator preffeences to restaurant model
+    creator_restaurants = []
+    for business in creator_data['businesses']:
         restaurant, created = Restaurant.objects.get_or_create(
             yelp_id=business['id'],
             defaults={
@@ -416,22 +437,55 @@ def get_restaurants(request):
                 'yelp_url': business['url'],
                 'image_url': business['image_url'],
                 'rating': business['rating'],
-                'outing': creator_preferences.outing
+                'outing': date_outing
             }
         )
         if created:
-            restaurants.append(restaurant)
-    
-    restaurants = Restaurant.objects.filter(outing=creator_preferences.outing)
+            creator_restaurants.append(restaurant)
+
+    # participant prefrences to restaurant model
+    participant_restaurants = []
+    for business in participant_data['businesses']:
+        restaurant, created = Restaurant.objects.get_or_create(
+            yelp_id=business['id'],
+            defaults={
+                'name': business['name'],
+                'location': business['location']['address1'],
+                'yelp_url': business['url'],
+                'image_url': business['image_url'],
+                'rating': business['rating'],
+                'outing': date_outing
+            }
+        )
+        if created:
+            participant_restaurants.append(restaurant)
+
     restaurant_list = []
-    for restaurant in restaurants:
+
+    # Append participant 3 to restaurant_list
+    for restaurant in participant_restaurants:
         restaurant_dict = {
-        'id': restaurant.id,
-        'name': restaurant.name,
-        'location': restaurant.location,
-        'yelp_url': restaurant.yelp_url,
-        'image_url': restaurant.image_url,
-        'rating': restaurant.rating,
-    }
-    restaurant_list.append(restaurant_dict)
+            'id': restaurant.id,
+            'name': restaurant.name,
+            'location': restaurant.location,
+            'yelp_url': restaurant.yelp_url,
+            'image_url': restaurant.image_url,
+            'rating': restaurant.rating,
+        }
+        restaurant_list.append(restaurant_dict)
+
+    # Append creator 3 to restaurant_list
+    for restaurant in creator_restaurants:
+        restaurant_dict = {
+            'id': restaurant.id,
+            'name': restaurant.name,
+            'location': restaurant.location,
+            'yelp_url': restaurant.yelp_url,
+            'image_url': restaurant.image_url,
+            'rating': restaurant.rating,
+        }
+        restaurant_list.append(restaurant_dict)
+
+    # Return complete list of 6 restaurants
     return Response({'restaurants': restaurant_list})
+
