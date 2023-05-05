@@ -13,7 +13,8 @@ import { FormControl,
 import React, { useState } from 'react';
 import { useAuth } from "../Context/AuthContext";
 
-const Preferences = () => {
+//TODO: prop outing_id
+const Preferences = ({ outing_id }) => {
   const { authUser } = useAuth();
 
   const [distance, setDistance] = useState("500");
