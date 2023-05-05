@@ -19,148 +19,43 @@ import CreateOuting from "../components/CreateOuting";
 
 const darkGrey = grey[800];
 
-const mockData = [
-  {
-    id: "0001",
-    first: "shelley",
-    second: "Ahsoka",
-    date: "05-01-2023",
-    status: "complete",
-    venue: "Olive Garden",
-  },
-  {
-    id: "0002",
-    first: "shelley",
-    second: "Padme",
-    date: "05-02-2023",
-    status: "pending",
-    venue: "",
-  },
-  {
-    id: "0003",
-    first: "shelley",
-    second: "Mando",
-    date: "04-28-2023",
-    status: "complete",
-    venue: "Chipotle",
-  },
-  {
-    id: "0004",
-    first: "shelley",
-    second: "Grogu",
-    date: "05-05-2023",
-    status: "scheduled",
-    venue: "Taco Bell",
-  },
-  {
-    id: "0005",
-    first: "shelley",
-    second: "ObiWan",
-    date: "02-14-2024",
-    status: "complete",
-    venue: "Cheesecake Factory",
-  },
-  {
-    id: "0006",
-    first: "shelley",
-    second: "Ahsoka",
-    date: "05-01-2023",
-    status: "complete",
-    venue: "Olive Garden",
-  },
-  {
-    id: "0007",
-    first: "shelley",
-    second: "Padme",
-    date: "05-02-2023",
-    status: "complete",
-    venue: "",
-  },
-  {
-    id: "0008",
-    first: "shelley",
-    second: "Mando",
-    date: "04-28-2023",
-    status: "complete",
-    venue: "Chipotle",
-  },
-  {
-    id: "0009",
-    first: "shelley",
-    second: "Grogu",
-    date: "05-05-2023",
-    status: "complete",
-    venue: "Taco Bell",
-  },
-  {
-    id: "00010",
-    first: "shelley",
-    second: "ObiWan",
-    date: "02-14-2024",
-    status: "scheduled",
-    venue: "Cheesecake Factory",
-  },
-  {
-    id: "00011",
-    first: "shelley",
-    second: "Ahsoka",
-    date: "05-01-2023",
-    status: "complete",
-    venue: "Olive Garden",
-  },
-  {
-    id: "00012",
-    first: "shelley",
-    second: "Padme",
-    date: "05-02-2023",
-    status: "pending",
-    venue: "",
-  },
-  {
-    id: "00013",
-    first: "shelley",
-    second: "Mando",
-    date: "04-28-2023",
-    status: "complete",
-    venue: "Chipotle",
-  },
-  {
-    id: "00014",
-    first: "shelley",
-    second: "Grogu",
-    date: "05-05-2023",
-    status: "scheduled",
-    venue: "Taco Bell",
-  },
-  {
-    id: "00015",
-    first: "shelley",
-    second: "ObiWan",
-    date: "02-14-2024",
-    status: "scheduled",
-    venue: "Cheesecake Factory",
-  },
-];
-
 const Dashboard = () => {
   const { authUser, isLoggedIn, setIsLoggedIn } = useAuth();
   const [outings, setOutings] = useState([]);
+  const [newOutingCreated, setNewOutingCreated] = useState(false);
+
+  const now = new Date().toISOString();
 
   useEffect(() => {
     // fetch outings from DB
-    setOutings(mockData);
-  }, []);
+    console.log(authUser);
+    fetch("https://bhupathitharun.pythonanywhere.com/api/getOutings", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${btoa(
+          authUser.username + ":" + authUser.password
+        )}`,
+      },
+    })
+      .then((resp) => resp.json())
+      .then((resp) => {
+        setOutings(resp.response.outings);
+        console.log(outings);
+        if (resp.error) alert(resp.error);
+      });
+  }, [authUser, newOutingCreated]);
 
   // filter all outings by status and return arrays for each dashboard section
-  const isPending = (outing) => outing.status === "pending";
-  const isScheduled = (outing) => outing.status === "scheduled";
-  const isComplete = (outing) => outing.status === "complete";
+  const isPending = (outing) => outing.state === "CREATED";
+  const isScheduled = (outing) =>
+    outing.state === "FINALIZED" && outing.time > now;
+  const isComplete = (outing) =>
+    outing.state === "FINALIZED" && outing.time < now;
 
   const pending = outings.filter(isPending);
   const scheduled = outings.filter(isScheduled);
   const complete = outings.filter(isComplete);
-
-  console.log({ pending, scheduled, complete });
 
   const handleSignOut = (e) => {
     e.preventDefault();
@@ -169,30 +64,31 @@ const Dashboard = () => {
 
   const createOuting = (datetime, invited, location) => {
     console.log(datetime);
-    console.log(datetime.format('YYYY-MM-DD HH:MM'));
+    console.log(datetime.format("YYYY-MM-DD HH:MM"));
     console.log(invited);
     console.log(location);
-    fetch("https://bhupathitharun.pythonanywhere.com/api/postPreference", {
+    fetch("https://bhupathitharun.pythonanywhere.com/api/createOuting", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Basic ${btoa(authUser.username + ":" + authUser.password)}`,
+        Authorization: `Basic ${btoa(
+          authUser.username + ":" + authUser.password
+        )}`,
       },
       body: JSON.stringify({
-        date_time: datetime.format('YYYY-MM-DD HH:MM'),
+        date_time: datetime.format("YYYY-MM-DD HH:MM"),
         location: location,
         partner: invited,
       }),
     })
-    .then((resp) => resp.json())
-    .then((resp) => {
-      console.log(resp);
-      if (resp.error)
-        alert(resp.error);
-      // update outing list
-      //navigate?
-    });
-    
+      .then((resp) => resp.json())
+      .then((resp) => {
+        console.log(resp);
+        setNewOutingCreated(!newOutingCreated);
+        if (resp.error) alert(resp.error);
+        // update outing list
+        //navigate?
+      });
   };
 
   return (
@@ -220,7 +116,7 @@ const Dashboard = () => {
               Sign Out
             </Button>
           </Stack>
-          <CreateOuting createOuting={createOuting}/>
+          <CreateOuting createOuting={createOuting} />
           <Stack
             direction={{ xs: "column", md: "row" }}
             divider={<Divider orientation="vertical" flexItem />}
@@ -230,27 +126,20 @@ const Dashboard = () => {
           >
             <Box
               sx={{
-                width: 400,
+                width: 500,
                 height: 300,
                 backgroundColor: darkGrey,
                 color: "white",
               }}
             >
-              <Button
-                variant="contained"
-                sx={{ marginTop: "20px" }}
-                onClick={createOuting}
-              >
-                Create New Outing
-              </Button>
               <List
                 sx={{
                   width: "100%",
-                  maxWidth: 400,
+                  height: 300,
                   marginTop: "10px",
                   position: "relative",
                   overflow: "auto",
-                  maxHeight: 200,
+                  maxHeight: 240,
                   "& ul": { padding: 0 },
                 }}
                 subheader={<li />}
@@ -261,7 +150,7 @@ const Dashboard = () => {
                     return (
                       <ListItem key={item.id}>
                         <ListItemText
-                          primary={`${item.date} with ${item.second}`}
+                          primary={`${item.time} ${item.creator} & ${item.partner}`}
                         />
                       </ListItem>
                     );
@@ -271,7 +160,7 @@ const Dashboard = () => {
             </Box>
             <Box
               sx={{
-                width: 400,
+                width: 500,
                 height: 300,
                 backgroundColor: darkGrey,
                 color: "white",
@@ -280,7 +169,6 @@ const Dashboard = () => {
               <List
                 sx={{
                   width: "100%",
-                  maxWidth: 400,
                   marginTop: "10px",
                   position: "relative",
                   overflow: "auto",
@@ -295,7 +183,7 @@ const Dashboard = () => {
                     return (
                       <ListItem key={item.id}>
                         <ListItemText
-                          primary={`${item.date} with ${item.second} @ ${item.venue}`}
+                          primary={`${item.time} ${item.creator} & ${item.partner} @ `}
                         />
                       </ListItem>
                     );
@@ -330,7 +218,7 @@ const Dashboard = () => {
                   return (
                     <ListItem key={item.id}>
                       <ListItemText
-                        primary={`${item.date} with ${item.second} @ ${item.venue}`}
+                        primary={`${item.time} ${item.creator} & ${item.partner} @ `}
                       />
                     </ListItem>
                   );
