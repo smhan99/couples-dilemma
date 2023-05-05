@@ -49,20 +49,20 @@ const CreateOuting = ({ createOuting }) => {
               label="Select Date"
               color="error"
               onChange={(newValue) => setOutingDate(newValue)}
-              required='true'
+              required={true}
             />
             <TimePicker 
               label="Select Time" 
               onChange={(newValue) => setOutingTime(newValue)}
               format="hh:mm a"
-              required='true'
+              required={true}
             />
           </LocalizationProvider>
           <TextField 
             id="filled-basic" 
             label="Username to Invite" 
             variant="filled" 
-            required='true'
+            required={true}
             onChange={(e) => setInvited(e.target.value)}
           />
           <TextField 
@@ -70,7 +70,7 @@ const CreateOuting = ({ createOuting }) => {
             label="Location... Type an address" 
             placeholder='New York City'
             variant="filled" 
-            required='true'
+            required={true}
             onChange={(e) => setLocation(e.target.value)}
           />
         </Stack>

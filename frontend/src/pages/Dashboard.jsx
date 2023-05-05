@@ -172,7 +172,7 @@ const Dashboard = () => {
     console.log(datetime.format('YYYY-MM-DD HH:MM'));
     console.log(invited);
     console.log(location);
-    fetch("https://bhupathitharun.pythonanywhere.com/api/postPreference", {
+    fetch("https://bhupathitharun.pythonanywhere.com/api/createOuting", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -187,6 +187,7 @@ const Dashboard = () => {
     .then((resp) => resp.json())
     .then((resp) => {
       console.log(resp);
+      console.log("DASHBOARD")
       if (resp.error)
         alert(resp.error);
       // update outing list
