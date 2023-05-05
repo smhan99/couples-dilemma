@@ -1,4 +1,5 @@
 import { useAuth } from "../Context/AuthContext";
+import { useNavigate } from "react-router-dom";
 import Login from "../components/Login";
 import Signup from "../components/Signup";
 import {
@@ -24,11 +25,11 @@ const Dashboard = () => {
   const [outings, setOutings] = useState([]);
   const [newOutingCreated, setNewOutingCreated] = useState(false);
 
+  const navigate = useNavigate();
   const now = new Date().toISOString();
 
   useEffect(() => {
     // fetch outings from DB
-    console.log(authUser);
     fetch("https://bhupathitharun.pythonanywhere.com/api/getOutings", {
       method: "GET",
       headers: {
@@ -41,7 +42,6 @@ const Dashboard = () => {
       .then((resp) => resp.json())
       .then((resp) => {
         setOutings(resp.response.outings);
-        console.log(outings);
         if (resp.error) alert(resp.error);
       });
   }, [authUser, newOutingCreated]);
@@ -84,11 +84,18 @@ const Dashboard = () => {
       .then((resp) => resp.json())
       .then((resp) => {
         console.log(resp);
-        setNewOutingCreated(!newOutingCreated);
         if (resp.error) alert(resp.error);
-        // update outing list
-        //navigate?
+        setNewOutingCreated(!newOutingCreated);
       });
+  };
+
+  const handlePreferences = (e) => {
+    const id = e.target.id;
+    navigate("/couples-dilemma/preferences", {
+      state: {
+        outing_id: id,
+      },
+    });
   };
 
   return (
@@ -149,9 +156,13 @@ const Dashboard = () => {
                   {pending.map((item) => {
                     return (
                       <ListItem key={item.id}>
+                        <Button id={item.id} onClick={handlePreferences}>
+                          {item.id}
+                        </Button>
                         <ListItemText
                           primary={`${item.time} ${item.creator} & ${item.partner}`}
                         />
+                        <Button>Choose</Button>
                       </ListItem>
                     );
                   })}
