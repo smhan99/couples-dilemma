@@ -139,7 +139,7 @@ const RestaurantList = () => {
       console.log(resp);
       if (resp.error)
         alert(resp.error);
-      setLeft(resp.restaurants); //TODO: Check if this is good
+      setLeft(resp.response.restaurants); //TODO: Check if this is good
     });
   }, [])
 

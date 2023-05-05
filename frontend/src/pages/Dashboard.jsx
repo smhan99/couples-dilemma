@@ -149,22 +149,26 @@ const Dashboard = () => {
                     return (
                       <ListItem key={item.id}>
                         <ListItemText
-                          primary={`${item.time} ${item.creator} & ${item.partner}`}
+                          primary={`${item.time} ${item.creator} & ${item.partner}, pending from: ${item.action_pending_from} status:${item.state}`}
                         />
-                        <Link
-                          to={`/couples-dilemma/preferences`}
-                          state={{ outing_id: item.id }}
-                        >
-                          <Button id={item.id}>PREFERENCES</Button>
-                        </Link>
-                        <Link
-                          to={`/couples-dilemma/restaurant-list`}
-                          state={{ outing_id: item.id }}
-                        >
-                          <Button disable id={item.id}>
-                            CHOOSE
-                          </Button>
-                        </Link>
+                        {(item.state === "CHOOSING_PREFERENCES" && (item.action_pending_from === authUser.username || item.action_pending_from === "both")) && 
+                          <Link
+                            to={`/couples-dilemma/preferences`}
+                            state={{ outing_id: item.id }}
+                          >
+                            <Button id={item.id}>PREFERENCES</Button>
+                          </Link>
+                        }
+                        {(item.state === "CHOOSING_RESTAURANT" && (item.action_pending_from === authUser.username || item.action_pending_from === "both")) && 
+                          <Link
+                            to={`/couples-dilemma/restaurant-list`}
+                            state={{ outing_id: item.id }}
+                          >
+                            <Button id={item.id}>
+                              CHOOSE
+                            </Button>
+                          </Link>
+                        }
                       </ListItem>
                     );
                   })}
