@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useState, useEffect } from 'react';
 import {
   Grid,
   ListItemButton,
@@ -19,7 +19,8 @@ function intersection(a, b) {
   return a.filter((value) => b.indexOf(value) !== -1);
 }
 
-const RestaurantList = () => {
+// TODO: Pass in outing_id as prop
+const RestaurantList = ( { outing_id }) => {
   const data = [{
     id: "id1",
     name: "restaurant 1",
@@ -63,9 +64,9 @@ const RestaurantList = () => {
     image_url: "https://s3-media2.fl.yelpcdn.com/bphoto/sHY-EPE1_nu7j2W8wd_akw/o.jpg",
   }]
   // photo, distance, etc...
-  const [checked, setChecked] = React.useState([]);
-  const [left, setLeft] = React.useState(data);
-  const [right, setRight] = React.useState([]);
+  const [checked, setChecked] = useState([]);
+  const [left, setLeft] = useState(data);
+  const [right, setRight] = useState([]);
 
   const leftChecked = intersection(checked, left);
   const rightChecked = intersection(checked, right);
@@ -115,6 +116,47 @@ const RestaurantList = () => {
     setRight([]);
   };
 
+  useEffect(() => {
+    fetch("https://bhupathitharun.pythonanywhere.com/api/getRestaurant", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${btoa(authUser.username + ":" + authUser.password)}`,
+      },
+      body: JSON.stringify({
+        //TODO: outing id
+      }),
+    })
+    .then((resp) => resp.json())
+    .then((resp) => {
+      console.log(resp);
+      if (resp.error)
+        alert(resp.error);
+      setLeft(resp.restaurants); //TODO: Check if this is good
+    });
+  }, [])
+
+  const submitRestaurants = () => {
+    fetch("https://bhupathitharun.pythonanywhere.com/api/postRestaurant", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${btoa(authUser.username + ":" + authUser.password)}`,
+      },
+      body: JSON.stringify({
+        restaurants: right, //TODO: check if this is right
+      }),
+    })
+    .then((resp) => resp.json())
+    .then((resp) => {
+      console.log(resp);
+      // TODO: check if correct response
+      if (resp.error)
+        alert(resp.error);
+      //TODO: navigate to dashboard
+    });
+  }
+
   const customList = (items, width, height, column) => (
     <Paper>
       <ImageList sx={{ width: width, height: height }} cols={column} dense component="div" role="list">
@@ -122,6 +164,7 @@ const RestaurantList = () => {
           const labelId = `transfer-list-item-${info.id}-label`;
 
           return (
+            //TODO: Possibly change the display according to data received from getRestaurants
             <ListItemButton
               key={info.id}
               role="listitem"
@@ -222,6 +265,7 @@ const RestaurantList = () => {
             <div>{customList(right, 800, "50%", 2)}</div>
         </Grid>
       </Grid>
+      <Button onClick={() => submitRestaurants()}>SUBMIT!</Button>
     </div>
   );
 }
