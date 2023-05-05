@@ -431,6 +431,10 @@ def get_restaurants(request):
     creator_restaurants = utils.create_restaurant_entries(date_outing, creator_response)
     participant_restaurants = utils.create_restaurant_entries(date_outing, participant_response)
 
+    if len(participant_restaurants) == 0:
+        participant_response = utils.get_yelp_response(date_outing.location, participant_preferences, True)
+        participant_restaurants = utils.create_restaurant_entries(date_outing, participant_response)
+
     restaurant_list = []
 
     for restaurant in creator_restaurants:
@@ -440,3 +444,10 @@ def get_restaurants(request):
         restaurant_list.append(utils.get_restaurant_object(restaurant))
 
     return Response({'restaurants': restaurant_list})
+
+
+
+@api_view(['POST'])
+@authentication_classes([BasicAuthentication])
+def post_restaurant_preference(request):
+    return ''

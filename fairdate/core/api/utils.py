@@ -45,7 +45,7 @@ def get_user_preference(user_preference=None):
     }
 
 
-def get_yelp_request_params(location, user_preference):
+def get_yelp_request_params(location, user_preference, isRepeat=False):
     request_body = {}
 
     request_body['location'] = location
@@ -63,15 +63,21 @@ def get_yelp_request_params(location, user_preference):
 
     if user_preference.has_parking:
         request_body['attributes'] = 'parking_lot'
-
-    request_body['limit'] = 3
+    if isRepeat:
+        request_body['limit'] = 6
+    else:
+        request_body['limit'] = 3
 
     return request_body
 
 
-def get_yelp_response(location, user_preference):
+def get_yelp_response(location, user_preference, isRepeat=False):
     headers = {'Authorization': 'bearer %s' % api_key.API_KEY}
-    request_params = get_yelp_request_params(location, user_preference)
+    if not isRepeat:
+        request_params = get_yelp_request_params(location, user_preference)
+    else:
+        request_params = get_yelp_request_params(location, user_preference, True)
+
 
     creator_response = requests.get('https://api.yelp.com/v3/businesses/search', headers=headers, params=request_params)
     return creator_response.json()
@@ -80,8 +86,10 @@ def get_yelp_response(location, user_preference):
 def create_restaurant_entries(outing, yelp_response):
     restaurants = []
     for business in yelp_response['businesses']:
+
         restaurant, created = Restaurant.objects.get_or_create(
             yelp_id=business['id'],
+            outing=outing,
             defaults={
                 'name': business['name'],
                 'location': ', '.join(business['location']['display_address']),
