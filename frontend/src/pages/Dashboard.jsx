@@ -159,6 +159,9 @@ const Dashboard = () => {
                             <Button id={item.id}>PREFERENCES</Button>
                           </Link>
                         }
+                        {(item.action_pending_from !== authUser.username && item.action_pending_from !== "both") && 
+                          <Button>Action Pending!</Button>
+                        }
                         {(item.state === "CHOOSING_RESTAURANT" && (item.action_pending_from === authUser.username || item.action_pending_from === "both")) && 
                           <Link
                             to={`/couples-dilemma/restaurant-list`}
