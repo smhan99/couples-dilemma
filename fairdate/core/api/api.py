@@ -278,16 +278,22 @@ def post_preference(request):
     category = request.data['category'] if 'category' in request.data.keys() else ''
 
     try:
-        price = int(request.data['price']) if 'price' in request.data.keys() else ''
-        if price < 1 or price > 4:
-            raise ValueError
+        if 'price' in request.data.keys():
+            price = int(request.data['price'])
+            if price < 1 or price > 4:
+                raise ValueError
+        else:
+            price = -1
     except ValueError:
         return Response({'error': "Invalid value for 'price' must be a int between 1 and 4 (both included)"})
 
     try:
-        rating = float(request.data['rating']) if 'rating' in request.data.keys() else 0.0
-        if rating < 0.0 or rating > 5.0:
-            raise ValueError
+        if 'rating' in request.data.keys():
+            rating = float(request.data['rating'])
+            if rating < 0.0 or rating > 5.0:
+                raise ValueError
+        else:
+            rating = 0.0
     except ValueError:
         return Response({'error': "Invalid value for 'rating' must be a float between 0.0 and 5.0"})
 
@@ -299,7 +305,12 @@ def post_preference(request):
     has_parking = True if has_parking == 'true' else False
 
     try:
-        radius = int(request.data['radius']) if 'radius' in request.data.keys() else -1
+        if 'radius' in request.data.keys():
+            radius = int(request.data['radius'])
+            if radius < 0:
+                raise ValueError
+        else:
+            radius = 0
     except ValueError:
         return Response({'error': "Invalid value for 'radius' must be int, specifying meters"})
 

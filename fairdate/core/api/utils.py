@@ -55,7 +55,7 @@ def get_yelp_request_params(location, user_preference):
     if user_preference.price != -1:
         request_body['price'] = ','.join([str(i) for i in range(1, user_preference.price + 1)])
 
-    if user_preference.rating != 0:
+    if user_preference.rating != 0.0:
         request_body['sort_by'] = 'rating'
 
     if user_preference.radius != 0:
