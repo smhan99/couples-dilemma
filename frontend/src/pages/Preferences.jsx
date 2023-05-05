@@ -16,10 +16,10 @@ import React, { useState } from "react";
 import { useAuth } from "../Context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 
-const Preferences = ({ outing_id }) => {
+const Preferences = () => {
   const { authUser } = useAuth();
   const location = useLocation();
-  const data = location.state;
+  const { outing_id } = location.state;
   const navigate = useNavigate();
 
   const [distance, setDistance] = useState("500");
@@ -42,6 +42,12 @@ const Preferences = ({ outing_id }) => {
   };
 
   const submitPreferences = () => {
+    console.log(outing_id);
+    console.log(rating);
+    console.log(category === "other" ? otherCate : category);
+    console.log(parking);
+    console.log(distance)
+    console.log(price);
     fetch("https://bhupathitharun.pythonanywhere.com/api/postPreference", {
       method: "POST",
       headers: {
@@ -51,15 +57,16 @@ const Preferences = ({ outing_id }) => {
         )}`,
       },
       body: JSON.stringify({
-        outing_id: data.outing_id,
+        outing_id: outing_id,
         rating: rating,
         category: category === "other" ? otherCate : category,
-        has_parking: parking,
+        has_parking: parking ? "true" : "false",
         radius: Number(distance),
         price: Number(price),
       }),
     })
       .then((resp) => resp.json())
+      .catch((err) => console.log(err))
       .then((resp) => {
         console.log(resp);
         console.log("HI");

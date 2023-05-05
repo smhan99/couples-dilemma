@@ -1,5 +1,5 @@
 import { useAuth } from "../Context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Login from "../components/Login";
 import Signup from "../components/Signup";
 import {
@@ -63,10 +63,6 @@ const Dashboard = () => {
   };
 
   const createOuting = (datetime, invited, location) => {
-    console.log(datetime);
-    console.log(datetime.format("YYYY-MM-DD HH:MM"));
-    console.log(invited);
-    console.log(location);
     fetch("https://bhupathitharun.pythonanywhere.com/api/createOuting", {
       method: "POST",
       headers: {
@@ -87,15 +83,6 @@ const Dashboard = () => {
         if (resp.error) alert(resp.error);
         setNewOutingCreated(!newOutingCreated);
       });
-  };
-
-  const handlePreferences = (e) => {
-    const id = e.target.id;
-    navigate("/couples-dilemma/preferences", {
-      state: {
-        outing_id: id,
-      },
-    });
   };
 
   return (
@@ -156,13 +143,19 @@ const Dashboard = () => {
                   {pending.map((item) => {
                     return (
                       <ListItem key={item.id}>
-                        <Button id={item.id} onClick={handlePreferences}>
-                          {item.id}
-                        </Button>
                         <ListItemText
                           primary={`${item.time} ${item.creator} & ${item.partner}`}
                         />
-                        <Button>Choose</Button>
+                        <Link to={`/couples-dilemma/preferences`} state={{ outing_id: item.id }}>
+                          <Button id={item.id}>
+                            PREFERENCES
+                          </Button>
+                        </Link>
+                        <Link to={`/couples-dilemma/restaurant-list`} state={{ outing_id: item.id }}>
+                          <Button id={item.id}>
+                            CHOOSE
+                          </Button>
+                        </Link>
                       </ListItem>
                     );
                   })}

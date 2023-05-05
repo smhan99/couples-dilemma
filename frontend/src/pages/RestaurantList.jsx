@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from "../Context/AuthContext";
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Grid,
   ListItemButton,
@@ -20,7 +22,7 @@ function intersection(a, b) {
 }
 
 // TODO: Pass in outing_id as prop
-const RestaurantList = ( { outing_id }) => {
+const RestaurantList = () => {
   const data = [{
     id: "id1",
     name: "restaurant 1",
@@ -67,6 +69,11 @@ const RestaurantList = ( { outing_id }) => {
   const [checked, setChecked] = useState([]);
   const [left, setLeft] = useState(data);
   const [right, setRight] = useState([]);
+
+  const { authUser } = useAuth();
+  const location = useLocation();
+  const { outing_id } = location.state;
+  const navigate = useNavigate();
 
   const leftChecked = intersection(checked, left);
   const rightChecked = intersection(checked, right);
@@ -124,7 +131,7 @@ const RestaurantList = ( { outing_id }) => {
         Authorization: `Basic ${btoa(authUser.username + ":" + authUser.password)}`,
       },
       body: JSON.stringify({
-        //TODO: outing id
+        outing_id: outing_id,
       }),
     })
     .then((resp) => resp.json())
@@ -137,6 +144,10 @@ const RestaurantList = ( { outing_id }) => {
   }, [])
 
   const submitRestaurants = () => {
+    let res_ids = []
+    right.forEach((restaurant) => {
+      res_ids.push(restaurant.id)
+    })
     fetch("https://bhupathitharun.pythonanywhere.com/api/postRestaurant", {
       method: "POST",
       headers: {
@@ -144,16 +155,15 @@ const RestaurantList = ( { outing_id }) => {
         Authorization: `Basic ${btoa(authUser.username + ":" + authUser.password)}`,
       },
       body: JSON.stringify({
-        restaurants: right, //TODO: check if this is right
+        restaurants: res_ids, //TODO: check if this is right
       }),
     })
     .then((resp) => resp.json())
     .then((resp) => {
       console.log(resp);
       // TODO: check if correct response
-      if (resp.error)
-        alert(resp.error);
-      //TODO: navigate to dashboard
+      if (resp.error) alert(resp.error);
+      navigate("/couples-dilemma/");
     });
   }
 
@@ -188,7 +198,7 @@ const RestaurantList = ( { outing_id }) => {
                   loading="lazy"
                 />
                 <ImageListItemBar
-                  title={`${info.name}  ${info.price}`}
+                  title={`${info.name}  ${info.rating}`}
                   subtitle={info.category}
                   // position="below"
                 />
