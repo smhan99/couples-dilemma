@@ -8,6 +8,8 @@ from .serializers import CustomUserSerializer, RestaurantSerializer, DateOutingS
 from core.models import CustomUser, Restaurant, DateOuting, RestaurantChoice, UserPreference
 import core.api.utils as utils
 from django.db.models import Q
+import requests
+import json
 
 
 @api_view(['POST'])
@@ -96,7 +98,7 @@ def register_user(request):
 @authentication_classes([BasicAuthentication])
 def create_outing(request):
     """
-        Takes input as outing date time, location and returns outing details.
+        Takes input as outing date time, location, partner's username and returns outing details.
 
         Input JSON:
         {
@@ -134,9 +136,11 @@ def create_outing(request):
     try:
         location = request.data['location']
         date_time = request.data['date_time']
-        partner_username = request.data['partner']
+        partner_username = request.data['partner'] 
     except KeyError as missing_key:
         return Response({'error': 'Missing key: ' + str(missing_key) + ' in the request'})
+
+# 
 
     try:
         partner = CustomUser.objects.get(username=partner_username)
@@ -362,3 +366,72 @@ def get_user_preference(request):
         }})
     except ObjectDoesNotExist:
         return Response({'error': "User preference hasn't been submitted yet"})
+
+
+@api_view(['POST'])
+def get_restaurants(request):
+
+    try:
+        user_preference_id = request.data['UserPreference_id']
+
+    except KeyError:
+        return Response({'error': "Missing 'UserPreference_id' in the request"})
+
+    creator_preferences = UserPreference.objects.filter(id=user_preference_id, outing__creator=request.user).first()
+    participant_preferences = UserPreference.objects.filter(id=user_preference_id, outing__creator__not=request.user).first()
+
+
+    categories = [creator_preferences.category]
+    if participant_preferences and participant_preferences.category != creator_preferences.category:
+        categories.append(participant_preferences.category)
+    
+    price = [creator_preferences.price]
+    if participant_preferences and participant_preferences.price != creator_preferences.price:
+        price.append(participant_preferences.price)
+
+    radius = creator_preferences.radius 
+
+
+    MY_API_KEY = 'YOUR API KEY'
+    headers = {'Authorization': 'bearer %s' % MY_API_KEY}
+    params = {
+        'location': creator_preferences.outing.location,
+        'categories': ','.join(categories),
+        'price': price,
+        'radius': radius,
+        'sort_by': 'rating',
+        'open_now': True,
+        'limit': 7
+    }
+    response = requests.get('https://api.yelp.com/v3/businesses/search', headers=headers, params=params)
+    response_data = response.json()
+    
+    restaurants = []
+    for business in response_data['businesses']:
+        restaurant, created = Restaurant.objects.get_or_create(
+            yelp_id=business['id'],
+            defaults={
+                'name': business['name'],
+                'location': business['location']['address1'],
+                'yelp_url': business['url'],
+                'image_url': business['image_url'],
+                'rating': business['rating'],
+                'outing': creator_preferences.outing
+            }
+        )
+        if created:
+            restaurants.append(restaurant)
+    
+    restaurants = Restaurant.objects.filter(outing=creator_preferences.outing)
+    restaurant_list = []
+    for restaurant in restaurants:
+        restaurant_dict = {
+        'id': restaurant.id,
+        'name': restaurant.name,
+        'location': restaurant.location,
+        'yelp_url': restaurant.yelp_url,
+        'image_url': restaurant.image_url,
+        'rating': restaurant.rating,
+    }
+    restaurant_list.append(restaurant_dict)
+    return Response({'restaurants': restaurant_list})

@@ -106,6 +106,7 @@ class DateOuting(models.Model):
     state = models.CharField(max_length=50, choices=STATE_CHOICES, default='CREATED')
     action_needed_from = models.CharField(max_length=50, blank=True, null=True, default='none')
 
+
     def __str__(self):
         return f"Outing between {self.creator} and {self.partner} on {self.date_time}"
 
@@ -120,8 +121,8 @@ class UserPreference(models.Model):
     category = models.CharField(max_length=200)
     price = models.IntegerField(default=-1)
     has_parking = models.BooleanField(default=False)
-    outing = models.ForeignKey(DateOuting, on_delete=models.CASCADE)
+    outing = models.ForeignKey(DateOuting, on_delete=models.CASCADE, related_name='outing')
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     radius = models.IntegerField(default=0)
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.0)
-
+    # i think this needs an id to diffrentiate diffrent prefrences for different outings
