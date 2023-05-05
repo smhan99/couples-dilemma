@@ -7,8 +7,8 @@ export function useAuth() {
 }
 
 export function AuthProvider(props) {
-  const [authUser, setAuthUser] = useState("");
-  const [isLoggedIn, setIsLoggedIn] = useState(null);
+  const [authUser, setAuthUser] = useState(JSON.parse(localStorage.getItem('user')));
+  const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem("user") !== null);
 
   const value = {
     authUser,

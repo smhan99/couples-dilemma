@@ -32,6 +32,10 @@ const Signup = () => {
             username: username,
             password: password,
           });
+          localStorage.setItem('user', JSON.stringify({
+            username,
+            password,
+          }))
         }
       });
   };

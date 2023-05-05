@@ -29,21 +29,23 @@ const Dashboard = () => {
 
   useEffect(() => {
     // fetch outings from DB
-    fetch("https://bhupathitharun.pythonanywhere.com/api/getOutings", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Basic ${btoa(
-          authUser.username + ":" + authUser.password
-        )}`,
-      },
-    })
-      .then((resp) => resp.json())
-      .then((resp) => {
-        setOutings(resp.response.outings);
-        console.log(outings);
-        if (resp.error) alert(resp.error);
-      });
+    if (authUser) {
+      fetch("https://bhupathitharun.pythonanywhere.com/api/getOutings", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${btoa(
+            authUser.username + ":" + authUser.password
+          )}`,
+        },
+      })
+        .then((resp) => resp.json())
+        .then((resp) => {
+          setOutings(resp.response.outings);
+          console.log(outings);
+          if (resp.error) alert(resp.error);
+        });
+    }
   }, [authUser, newOutingCreated]);
 
   // filter all outings by status and return arrays for each dashboard section
