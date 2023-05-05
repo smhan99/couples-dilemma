@@ -1,7 +1,13 @@
+import core.api.api_key as api_key
+import requests
+from core.models import Restaurant
+
+
 def get_restaurant_object(restaurant=None):
     if restaurant is None:
         return ""
     return {
+        "id": restaurant.id,
         "yelp_id": restaurant.yelp_id,
         "yelp_url": restaurant.yelp_url,
         "name": restaurant.name,
@@ -37,3 +43,55 @@ def get_user_preference(user_preference=None):
         "has_parking": user_preference.has_parking,
         "radius": user_preference.radius
     }
+
+
+def get_yelp_request_params(location, user_preference):
+    request_body = {}
+
+    request_body['location'] = location
+    if user_preference.category != '':
+        request_body['categories'] = user_preference.category
+
+    if user_preference.price != -1:
+        request_body['price'] = ','.join([str(i) for i in range(1, user_preference.price + 1)])
+
+    if user_preference.rating != 0:
+        request_body['sort_by'] = 'rating'
+
+    if user_preference.radius != 0:
+        request_body['radius'] = user_preference.radius
+
+    if user_preference.has_parking:
+        request_body['attributes'] = 'parking_lot'
+
+    request_body['limit'] = 3
+
+    return request_body
+
+
+def get_yelp_response(location, user_preference):
+    headers = {'Authorization': 'bearer %s' % api_key.API_KEY}
+    request_params = get_yelp_request_params(location, user_preference)
+
+    creator_response = requests.get('https://api.yelp.com/v3/businesses/search', headers=headers, params=request_params)
+    return creator_response.json()
+
+
+def create_restaurant_entries(outing, yelp_response):
+    restaurants = []
+    for business in yelp_response['businesses']:
+        restaurant, created = Restaurant.objects.get_or_create(
+            yelp_id=business['id'],
+            defaults={
+                'name': business['name'],
+                'location': ', '.join(business['location']['display_address']),
+                'yelp_url': business['url'],
+                'image_url': business['image_url'],
+                'rating': business['rating'],
+                'outing': outing
+            }
+        )
+        if created:
+            restaurants.append(restaurant)
+
+    return restaurants

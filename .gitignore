@@ -11,3 +11,4 @@ fairdate/**/migrations/
 fairdate/core/migrations/
 .idea
 fairdate/core/migrations/0001_initial.py
+fairdate/core/api/api_key.py

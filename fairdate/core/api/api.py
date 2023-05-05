@@ -8,6 +8,7 @@ from .serializers import CustomUserSerializer, RestaurantSerializer, DateOutingS
 from core.models import CustomUser, Restaurant, DateOuting, RestaurantChoice, UserPreference
 import core.api.utils as utils
 from django.db.models import Q
+import core.api.api_key as api_key
 import requests
 import json
 
@@ -104,6 +105,7 @@ def create_outing(request):
         {
             "date_time" : <Date and time of the event in the format YYYY-MM-HH:MM>
             "location" : <Location string>
+            "partner" : <username of the partner>
         }
 
         Output JSON:
@@ -136,11 +138,11 @@ def create_outing(request):
     try:
         location = request.data['location']
         date_time = request.data['date_time']
-        partner_username = request.data['partner'] 
+        partner_username = request.data['partner']
     except KeyError as missing_key:
         return Response({'error': 'Missing key: ' + str(missing_key) + ' in the request'})
 
-# 
+    #
 
     try:
         partner = CustomUser.objects.get(username=partner_username)
@@ -148,7 +150,7 @@ def create_outing(request):
         return Response({'error': "User doesn\'t exist with the username: '" + partner_username + "' provided"})
     try:
         outing = DateOuting(creator=request.user, date_time=date_time, location=location, partner=partner,
-                            action_needed_from='both')
+                            action_needed_from='both', state='CHOOSING_PREFERENCES')
         outing.save()
 
         return Response({'response': {
@@ -264,6 +266,9 @@ def post_preference(request):
     except ObjectDoesNotExist:
         return Response({'error': "Outing doesn't exist with the given ID"})
 
+    if outing.state != 'CHOOSING_PREFERENCES':
+        return Response({'error': 'The outing is in invalid state to submit preferences. State: ' + outing.state})
+
     try:
         UserPreference.objects.get(outing=outing, user=request.user)
         return Response({'error': "User preference already submitted"})
@@ -302,6 +307,13 @@ def post_preference(request):
         preference = UserPreference(outing=outing, user=request.user, category=category, price=price, rating=rating,
                                     has_parking=has_parking, radius=radius)
         preference.save()
+
+        if outing.action_needed_from == 'both':
+            outing.action_needed_from = outing.creator.username if outing.partner == request.user else outing.partner.username
+        else:
+            outing.state = 'CHOOSING_RESTAURANT'
+            outing.action_needed_from = 'both'
+        outing.save()
 
         return Response({'response': 'User preference successfully captured'})
     except BaseException as message:
@@ -368,124 +380,52 @@ def get_user_preference(request):
         return Response({'error': "User preference hasn't been submitted yet"})
 
 
-
-@api_view(['GET','POST'])
+@api_view(['POST'])
+@authentication_classes([BasicAuthentication])
 def get_restaurants(request):
-
     try:
         outing_id = request.data['outing_id']
-
     except KeyError:
         return Response({'error': "Missing 'outing_id' in the request"})
 
-    date_outing = DateOuting.objects.get(id=outing_id)
+    try:
+        date_outing = DateOuting.objects.get(id=outing_id)
+    except ObjectDoesNotExist:
+        return Response({'error': "Outing doesn't exist with the given ID"})
 
-    # prefrences for both
-    creator_preferences = UserPreference.objects.filter(outing=date_outing, outing__creator=request.user).first()
-    participant_preferences = UserPreference.objects.filter(outing=date_outing, outing__creator__not=request.user).first()
+    # check if the records already exist, if they do, send them directly
+    try:
+        restaurants = Restaurant.objects.filter(outing=date_outing)
+        restaurant_list = []
+        if len(restaurants) != 0:
+            for restaurant in restaurants:
+                restaurant_list.append(utils.get_restaurant_object(restaurant))
 
-    # creator search
-    creator_categories = [creator_preferences.category]
-    creator_price = [creator_preferences.price]
-    creator_radius = creator_preferences.radius 
-    creator_limit = 3
+            return Response({'response': {'restaurants': restaurant_list}})
+    except BaseException as message:
+        return Response({'error': str(message)})
 
+    try:
+        creator_preferences = UserPreference.objects.get(outing=date_outing, user=date_outing.creator)
+        participant_preferences = UserPreference.objects.get(outing=date_outing, user=date_outing.partner)
+    except ObjectDoesNotExist:
+        return Response({'error': 'One of the preferences missing'})
 
-    MY_API_KEY = 'YOUR API KEY'
-    headers = {'Authorization': 'bearer %s' % MY_API_KEY}
+    creator_response = utils.get_yelp_response(date_outing.location, creator_preferences)
+    participant_response = utils.get_yelp_response(date_outing.location, participant_preferences)
 
-    # creator call
-    creator_params = {
-        'location': creator_preferences.outing.location,
-        'categories': ','.join(creator_categories),
-        'price': creator_price,
-        'radius': creator_radius,
-        'sort_by': 'rating',
-        'open_now': True,
-        'limit': creator_limit
-    }
-    creator_response = requests.get('https://api.yelp.com/v3/businesses/search', headers=headers, params=creator_params)
-    creator_data = creator_response.json()
+    if not ('businesses' in creator_response.keys() and 'businesses' in participant_response.keys()):
+        return Response({'error': 'Error in fetching response from Yelp'})
 
-    # participant seragc
-    participant_categories = [participant_preferences.category]
-    participant_price = [participant_preferences.price]
-    participant_radius = participant_preferences.radius 
-    participant_limit = 3
-
-    # particpant call
-    participant_params = {
-        'location': participant_preferences.outing.location,
-        'categories': ','.join(participant_categories),
-        'price': participant_price,
-        'radius': participant_radius,
-        'sort_by': 'rating',
-        'open_now': True,
-        'limit': participant_limit
-    }
-    participant_response = requests.get('https://api.yelp.com/v3/businesses/search', headers=headers, params=participant_params)
-    participant_data = participant_response.json()
-
-    # save creator preffeences to restaurant model
-    creator_restaurants = []
-    for business in creator_data['businesses']:
-        restaurant, created = Restaurant.objects.get_or_create(
-            yelp_id=business['id'],
-            defaults={
-                'name': business['name'],
-                'location': business['location']['address1'],
-                'yelp_url': business['url'],
-                'image_url': business['image_url'],
-                'rating': business['rating'],
-                'outing': date_outing
-            }
-        )
-        if created:
-            creator_restaurants.append(restaurant)
-
-    # participant prefrences to restaurant model
-    participant_restaurants = []
-    for business in participant_data['businesses']:
-        restaurant, created = Restaurant.objects.get_or_create(
-            yelp_id=business['id'],
-            defaults={
-                'name': business['name'],
-                'location': business['location']['address1'],
-                'yelp_url': business['url'],
-                'image_url': business['image_url'],
-                'rating': business['rating'],
-                'outing': date_outing
-            }
-        )
-        if created:
-            participant_restaurants.append(restaurant)
+    creator_restaurants = utils.create_restaurant_entries(date_outing, creator_response)
+    participant_restaurants = utils.create_restaurant_entries(date_outing, participant_response)
 
     restaurant_list = []
 
-    # Append participant 3 to restaurant_list
-    for restaurant in participant_restaurants:
-        restaurant_dict = {
-            'id': restaurant.id,
-            'name': restaurant.name,
-            'location': restaurant.location,
-            'yelp_url': restaurant.yelp_url,
-            'image_url': restaurant.image_url,
-            'rating': restaurant.rating,
-        }
-        restaurant_list.append(restaurant_dict)
-
-    # Append creator 3 to restaurant_list
     for restaurant in creator_restaurants:
-        restaurant_dict = {
-            'id': restaurant.id,
-            'name': restaurant.name,
-            'location': restaurant.location,
-            'yelp_url': restaurant.yelp_url,
-            'image_url': restaurant.image_url,
-            'rating': restaurant.rating,
-        }
-        restaurant_list.append(restaurant_dict)
+        restaurant_list.append(utils.get_restaurant_object(restaurant))
 
-    # Return complete list of 6 restaurants
+    for restaurant in participant_restaurants:
+        restaurant_list.append(utils.get_restaurant_object(restaurant))
+
     return Response({'restaurants': restaurant_list})
-

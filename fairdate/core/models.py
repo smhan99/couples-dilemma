@@ -65,8 +65,8 @@ class Restaurant(models.Model):
     yelp_url = models.URLField(max_length=500)
     yelp_id = models.CharField(max_length=100)
     image_url = models.URLField(max_length=200)
-    rating = models.DecimalField(max_digits=3, decimal_places=2, default="")
-    outing = models.ForeignKey('DateOuting', on_delete=models.CASCADE, related_name='outing')
+    rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.0)
+    outing = models.ForeignKey('DateOuting', on_delete=models.CASCADE, related_name='restaurant_outing')
 
     def __str__(self):
         return self.name
@@ -106,7 +106,6 @@ class DateOuting(models.Model):
     state = models.CharField(max_length=50, choices=STATE_CHOICES, default='CREATED')
     action_needed_from = models.CharField(max_length=50, blank=True, null=True, default='none')
 
-
     def __str__(self):
         return f"Outing between {self.creator} and {self.partner} on {self.date_time}"
 
@@ -121,7 +120,7 @@ class UserPreference(models.Model):
     category = models.CharField(max_length=200)
     price = models.IntegerField(default=-1)
     has_parking = models.BooleanField(default=False)
-    outing = models.ForeignKey(DateOuting, on_delete=models.CASCADE, related_name='outing')
+    outing = models.ForeignKey(DateOuting, on_delete=models.CASCADE, related_name='user_preference_outing')
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     radius = models.IntegerField(default=0)
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.0)
