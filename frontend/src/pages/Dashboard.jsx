@@ -81,7 +81,6 @@ const Dashboard = () => {
         partner: invited,
       }),
     })
-<<<<<<< HEAD
       .then((resp) => resp.json())
       .then((resp) => {
         console.log(resp);
@@ -90,18 +89,6 @@ const Dashboard = () => {
         // update outing list
         //navigate?
       });
-=======
-    .then((resp) => resp.json())
-    .then((resp) => {
-      console.log(resp);
-      console.log("DASHBOARD")
-      if (resp.error)
-        alert(resp.error);
-      // update outing list
-      //navigate?
-    });
-    
->>>>>>> a44f7f2bf020e8369c432133c6d773aa764c23db
   };
 
   return (
