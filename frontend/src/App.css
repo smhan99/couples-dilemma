@@ -40,3 +40,15 @@
 .read-the-docs {
   color: #888;
 }
+
+.createOuting {
+  background-color: beige;
+  padding-top: 1%;
+  padding-bottom: 3%;
+  padding-left: 2%;
+  padding-right: 2%;
+}
+
+.preferences {
+  text-align: left;
+}

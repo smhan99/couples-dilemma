@@ -1,12 +1,15 @@
 import * as React from 'react';
-import Grid from '@mui/material/Grid';
-import List from '@mui/material/List';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import Checkbox from '@mui/material/Checkbox';
-import Button from '@mui/material/Button';
-import Paper from '@mui/material/Paper';
-import { ListItemButton } from '@mui/material';
+import {
+  Grid,
+  ListItemButton,
+  ListItemIcon,
+  Checkbox,
+  Button,
+  Paper,
+  ImageList,
+  ImageListItem,
+  ImageListItemBar,
+} from '@mui/material'
 
 function not(a, b) {
   return a.filter((value) => b.indexOf(value) === -1);
@@ -22,43 +25,43 @@ const RestaurantList = () => {
     name: "restaurant 1",
     price: "$$",
     category: "chinese",
+    image_url: "https://s3-media2.fl.yelpcdn.com/bphoto/sHY-EPE1_nu7j2W8wd_akw/o.jpg",
   },
   {
     id: "id2",
     name: "restaurant 2",
     price: "$$",
     category: "chinese",
+    image_url: "https://s3-media2.fl.yelpcdn.com/bphoto/sHY-EPE1_nu7j2W8wd_akw/o.jpg",
   },
   {
     id: "id3",
     name: "restaurant 3",
     price: "$$",
     category: "chinese",
+    image_url: "https://s3-media2.fl.yelpcdn.com/bphoto/sHY-EPE1_nu7j2W8wd_akw/o.jpg",
   },
   {
     id: "id4",
     name: "restaurant 4",
     price: "$$",
     category: "chinese",
+    image_url: "https://s3-media2.fl.yelpcdn.com/bphoto/sHY-EPE1_nu7j2W8wd_akw/o.jpg",
   },
   {
     id: "id5",
     name: "restaurant 5",
     price: "$$",
     category: "chinese",
+    image_url: "https://s3-media2.fl.yelpcdn.com/bphoto/sHY-EPE1_nu7j2W8wd_akw/o.jpg",
   },
   {
     id: "id6",
     name: "restaurant 6",
     price: "$$",
     category: "chinese",
-  },
-  {
-    id: "id7",
-    name: "restaurant 7",
-    price: "$$",
-    category: "chinese",
-  },]
+    image_url: "https://s3-media2.fl.yelpcdn.com/bphoto/sHY-EPE1_nu7j2W8wd_akw/o.jpg",
+  }]
   // photo, distance, etc...
   const [checked, setChecked] = React.useState([]);
   const [left, setLeft] = React.useState(data);
@@ -85,7 +88,6 @@ const RestaurantList = () => {
     let toFill = 4 - rightCount;
     let newLeft = [...left];
     let newRight = [...right];
-    console.log(newRight);
     while (toFill > 0) {
       let randomIndex = Math.floor(Math.random() * newLeft.length);
       let elem = newLeft.splice(randomIndex, 1);
@@ -113,9 +115,9 @@ const RestaurantList = () => {
     setRight([]);
   };
 
-  const customList = (items) => (
-    <Paper sx={{ width: 200, height: 230, overflow: 'auto' }}>
-      <List dense component="div" role="list">
+  const customList = (items, width, height, column) => (
+    <Paper>
+      <ImageList sx={{ width: width, height: height }} cols={column} dense component="div" role="list">
         {items.map((info) => {
           const labelId = `transfer-list-item-${info.id}-label`;
 
@@ -135,18 +137,33 @@ const RestaurantList = () => {
                   }}
                 />
               </ListItemIcon>
-              <ListItemText id={labelId} primary={`${info.name}`} />
+              <ImageListItem>
+                <img
+                  src={`${info.image_url}`}
+                  srcSet={`${info.image_url}`}
+                  alt={info.name}
+                  loading="lazy"
+                />
+                <ImageListItemBar
+                  title={`${info.name}  ${info.price}`}
+                  subtitle={info.category}
+                  // position="below"
+                />
+              </ImageListItem>
             </ListItemButton>
           );
         })}
-      </List>
+      </ImageList>
     </Paper>
   );
 
   return (
-    <Grid container spacing={2} justifyContent="center" alignItems="center">
-      <Grid item>{customList(left)}</Grid>
+    <Grid container spacing={2} justifyContent="center">
       <Grid item>
+        <h1>CHOOSE</h1>
+        <div>{customList(left, 300, "50%", 1)}</div>
+      </Grid>
+      <Grid item marginTop={15}>
         <Grid container direction="column" alignItems="center">
           <Button
             sx={{ my: 0.5 }}
@@ -156,7 +173,7 @@ const RestaurantList = () => {
             disabled={left.length === 0 || right.length === 4}
             aria-label="Random Suggestions"
           >
-            ≫
+            Random Fill
           </Button>
           <Button
             sx={{ my: 0.5 }}
@@ -186,11 +203,14 @@ const RestaurantList = () => {
             disabled={right.length === 0}
             aria-label="move all left"
           >
-            ≪
+            Clear
           </Button>
         </Grid>
       </Grid>
-      <Grid item><h1>TOP CHOICES</h1>{customList(right)}</Grid>
+      <Grid item>
+          <h1>TOP CHOICES</h1>
+          <div>{customList(right, 800, "50%", 2)}</div>
+      </Grid>
     </Grid>
   );
 }

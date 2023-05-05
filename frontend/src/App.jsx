@@ -1,6 +1,8 @@
 import { AuthProvider } from "./Context/AuthContext";
 import "./App.css";
 import Dashboard from "./pages/Dashboard";
+import Preferences from "./pages/Preferences";
+import RestaurantList from "./pages/RestaurantList";
 
 function App() {
   return (

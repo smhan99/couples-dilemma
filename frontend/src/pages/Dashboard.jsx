@@ -15,6 +15,7 @@ import {
 import { grey } from "@mui/material/colors";
 import plate from "../assets/blueplate.png";
 import { useEffect, useState } from "react";
+import CreateOuting from "../components/CreateOuting";
 
 const darkGrey = grey[800];
 
@@ -166,10 +167,32 @@ const Dashboard = () => {
     setIsLoggedIn(false);
   };
 
-  const createOuting = (e) => {
-    e.preventDefault();
-    console.log("clicked Create Outing");
-    // navigate to create outing page
+  const createOuting = (datetime, invited, location) => {
+    console.log(datetime);
+    console.log(datetime.format('YYYY-MM-DD HH:MM'));
+    console.log(invited);
+    console.log(location);
+    fetch("https://bhupathitharun.pythonanywhere.com/api/postPreference", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${btoa(authUser.username + ":" + authUser.password)}`,
+      },
+      body: JSON.stringify({
+        date_time: datetime.format('YYYY-MM-DD HH:MM'),
+        location: location,
+        partner: invited,
+      }),
+    })
+    .then((resp) => resp.json())
+    .then((resp) => {
+      console.log(resp);
+      if (resp.error)
+        alert(resp.error);
+      // update outing list
+      //navigate?
+    });
+    
   };
 
   return (
@@ -197,6 +220,7 @@ const Dashboard = () => {
               Sign Out
             </Button>
           </Stack>
+          <CreateOuting createOuting={createOuting}/>
           <Stack
             direction={{ xs: "column", md: "row" }}
             divider={<Divider orientation="vertical" flexItem />}
