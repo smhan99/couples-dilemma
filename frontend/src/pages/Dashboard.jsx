@@ -24,6 +24,7 @@ const Dashboard = () => {
   const { authUser, setAuthUser, isLoggedIn, setIsLoggedIn } = useAuth();
   const [outings, setOutings] = useState([]);
   const [newOutingCreated, setNewOutingCreated] = useState(false);
+  const [signup, setSignup] = useState(false);
 
   const now = new Date().toISOString();
 
@@ -98,8 +99,13 @@ const Dashboard = () => {
       </Typography>
       {!isLoggedIn ? (
         <div>
-          <Login />
-          <Signup />
+          {!signup ? (<div>
+            <Login/>
+            <Button onClick={(e) => setSignup(true)} variant="outlined">Not a user? Sign up</Button>
+            </div>) : (<div>
+            <Signup/>
+            <Button onClick={(e) => setSignup(false)} variant="outlined">Back to Sign In</Button>
+            </div>)}
         </div>
       ) : (
         <div>
@@ -153,7 +159,7 @@ const Dashboard = () => {
                     return (
                       <ListItem key={item.id}>
                         <ListItemText
-                          primary={`${item.time} ${item.creator} & ${item.partner}, pending from: ${item.action_pending_from} status:${item.state}`}
+                          primary={`${item.time} ${item.creator} & ${item.partner}`}
                         />
                         {(item.state === "CHOOSING_PREFERENCES" && (item.action_pending_from === authUser.username || item.action_pending_from === "both")) && 
                           <Link
@@ -209,6 +215,7 @@ const Dashboard = () => {
                         <ListItemText
                           primary={`${item.time} ${item.creator} & ${item.partner} @ `}
                         />
+                        <a href={item.venue.yelp_url} target="_blank">{item.venue.name}</a>
                       </ListItem>
                     );
                   })}
@@ -242,8 +249,9 @@ const Dashboard = () => {
                   return (
                     <ListItem key={item.id}>
                       <ListItemText
-                        primary={`${item.time} ${item.creator} & ${item.partner} @ `}
+                        primary={`${item.time} ${item.creator} & ${item.partner} @`}
                       />
+                      <a href={item.venue.yelp_url} target="_blank">{item.venue.name}</a>
                     </ListItem>
                   );
                 })}

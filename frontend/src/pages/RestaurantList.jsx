@@ -23,51 +23,9 @@ function intersection(a, b) {
 
 // TODO: Pass in outing_id as prop
 const RestaurantList = () => {
-  const data = [{
-    id: "id1",
-    name: "restaurant 1",
-    price: "$$",
-    category: "chinese",
-    image_url: "https://s3-media2.fl.yelpcdn.com/bphoto/sHY-EPE1_nu7j2W8wd_akw/o.jpg",
-  },
-  {
-    id: "id2",
-    name: "restaurant 2",
-    price: "$$",
-    category: "chinese",
-    image_url: "https://s3-media2.fl.yelpcdn.com/bphoto/sHY-EPE1_nu7j2W8wd_akw/o.jpg",
-  },
-  {
-    id: "id3",
-    name: "restaurant 3",
-    price: "$$",
-    category: "chinese",
-    image_url: "https://s3-media2.fl.yelpcdn.com/bphoto/sHY-EPE1_nu7j2W8wd_akw/o.jpg",
-  },
-  {
-    id: "id4",
-    name: "restaurant 4",
-    price: "$$",
-    category: "chinese",
-    image_url: "https://s3-media2.fl.yelpcdn.com/bphoto/sHY-EPE1_nu7j2W8wd_akw/o.jpg",
-  },
-  {
-    id: "id5",
-    name: "restaurant 5",
-    price: "$$",
-    category: "chinese",
-    image_url: "https://s3-media2.fl.yelpcdn.com/bphoto/sHY-EPE1_nu7j2W8wd_akw/o.jpg",
-  },
-  {
-    id: "id6",
-    name: "restaurant 6",
-    price: "$$",
-    category: "chinese",
-    image_url: "https://s3-media2.fl.yelpcdn.com/bphoto/sHY-EPE1_nu7j2W8wd_akw/o.jpg",
-  }]
   // photo, distance, etc...
   const [checked, setChecked] = useState([]);
-  const [left, setLeft] = useState(data);
+  const [left, setLeft] = useState([]);
   const [right, setRight] = useState([]);
 
   const { authUser } = useAuth();
@@ -148,6 +106,8 @@ const RestaurantList = () => {
     right.forEach((restaurant) => {
       res_ids.push(restaurant.id)
     })
+    console.log(res_ids);
+    console.log(outing_id);
     fetch("https://bhupathitharun.pythonanywhere.com/api/postRestaurant", {
       method: "POST",
       headers: {
@@ -155,13 +115,13 @@ const RestaurantList = () => {
         Authorization: `Basic ${btoa(authUser.username + ":" + authUser.password)}`,
       },
       body: JSON.stringify({
-        restaurants: res_ids, //TODO: check if this is right
+        outing_id: outing_id,
+        restaurant_ids: res_ids, //TODO: check if this is right
       }),
     })
     .then((resp) => resp.json())
     .then((resp) => {
       console.log(resp);
-      // TODO: check if correct response
       if (resp.error) alert(resp.error);
       navigate("/couples-dilemma/");
     });
@@ -198,9 +158,11 @@ const RestaurantList = () => {
                   loading="lazy"
                 />
                 <ImageListItemBar
-                  title={`${info.name}  ${info.rating}`}
+                  title={`${info.name} ${info.rating} stars`}
                   subtitle={info.category}
-                  // position="below"
+                  actionIcon={
+                    <Button href={info.yelp_url} target="_blank">YELP LINK</Button>
+                  }
                 />
               </ImageListItem>
             </ListItemButton>
