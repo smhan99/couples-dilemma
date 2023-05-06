@@ -1,6 +1,7 @@
 import core.api.api_key as api_key
 import requests
-from core.models import Restaurant
+from core.models import Restaurant, RestaurantChoice
+from django.db.models import Count
 
 
 def get_restaurant_object(restaurant=None):
@@ -78,7 +79,6 @@ def get_yelp_response(location, user_preference, isRepeat=False):
     else:
         request_params = get_yelp_request_params(location, user_preference, True)
 
-
     creator_response = requests.get('https://api.yelp.com/v3/businesses/search', headers=headers, params=request_params)
     return creator_response.json()
 
@@ -103,3 +103,14 @@ def create_restaurant_entries(outing, yelp_response):
             restaurants.append(restaurant)
 
     return restaurants
+
+
+def get_final_restaurant(outing):
+    choices = RestaurantChoice.objects.filter(outing=outing)
+    choice_counts = choices.values('restaurant').annotate(dcount=Count('restaurant')).order_by()
+
+    for choice_count in choice_counts:
+        if choice_count['dcount'] == 2:
+            return Restaurant.objects.get(id=choice_count['restaurant'])
+
+    return None

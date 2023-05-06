@@ -17,5 +17,6 @@ urlpatterns = [
     path('getOutings', api.get_my_outings, name='get_my_outings'),
     path('postPreference', api.post_preference, name='post_preference'),
     path('getPreference', api.get_user_preference, name='get_preference'),
-    path('getRestaurant', api.get_restaurants, name='get_restaurants')
+    path('getRestaurant', api.get_restaurants, name='get_restaurants'),
+    path('postRestaurant', api.post_restaurant_preference, name='post_restaurant_preference')
 ]

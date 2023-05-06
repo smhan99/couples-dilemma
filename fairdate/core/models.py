@@ -105,6 +105,8 @@ class DateOuting(models.Model):
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, null=True, blank=True, related_name='venue')
     state = models.CharField(max_length=50, choices=STATE_CHOICES, default='CREATED')
     action_needed_from = models.CharField(max_length=50, blank=True, null=True, default='none')
+    # creator_restaurant_choices = models.CharField(max_length=50, blank=True,null=True, default='')
+    # partner_restaurant_choices = models.CharField(max_length=50, blank=True, null=True, default='')
 
     def __str__(self):
         return f"Outing between {self.creator} and {self.partner} on {self.date_time}"
@@ -124,4 +126,4 @@ class UserPreference(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     radius = models.IntegerField(default=0)
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.0)
-    # i think this needs an id to diffrentiate diffrent prefrences for different outings
+    # i think this needs an id to diffrentiate different prefrences for different outings

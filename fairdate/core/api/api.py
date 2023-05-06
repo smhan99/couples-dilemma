@@ -446,8 +446,41 @@ def get_restaurants(request):
     return Response({'restaurants': restaurant_list})
 
 
-
 @api_view(['POST'])
 @authentication_classes([BasicAuthentication])
 def post_restaurant_preference(request):
-    return ''
+    try:
+        restaurant_ids = request.data['restaurant_ids']
+        outing_id = request.data['outing_id']
+    except KeyError as missing_key:
+        return Response({'error': "Missing '" + str(missing_key) + "' in the request"})
+
+    try:
+        outing = DateOuting.objects.get(id=outing_id)
+    except ObjectDoesNotExist:
+        return Response({'error': "Outing doesn't exist with the given ID"})
+
+    if outing.state != 'CHOOSING_RESTAURANT':
+        return Response({'error': 'The outing is in invalid state to submit restaurant choices. State: ' + outing.state})
+
+    results = RestaurantChoice.objects.filter(outing=outing, user=request.user)
+    if len(results) != 0:
+        return Response({'error': "User restaurant preference already submitted"})
+
+    for restaurant_id in restaurant_ids:
+        try:
+            restaurant = Restaurant.objects.get(id=restaurant_id)
+            choice = RestaurantChoice(user=request.user, outing=outing, restaurant=restaurant)
+            choice.save()
+        except ObjectDoesNotExist:
+            return Response({'error': "Invalid restaurant ID sent"})
+
+    if outing.action_needed_from == 'both':
+        outing.action_needed_from = outing.creator.username if outing.partner == request.user else outing.partner.username
+    else:
+        outing.state = 'FINALIZED'
+        outing.restaurant = utils.get_final_restaurant(outing)
+        outing.action_needed_from = 'none'
+    outing.save()
+
+    return Response({'response': 'User restaurant preference successfully captured'})
